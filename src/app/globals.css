@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Cabinet+Grotesk:wght@400;500;700;800;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Cabinet Grotesk', system-ui, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: #080A0D;
+  color: #E2E8F0;
+  font-family: var(--font-sans);
+  overflow: hidden;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 3px; height: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #1A2030; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #2a3450; }
+
+/* Ticker */
+.ticker-wrap { overflow: hidden; }
+.ticker-inner {
+  display: flex;
+  animation: ticker 50s linear infinite;
+  white-space: nowrap;
+  width: max-content;
+}
+.ticker-inner:hover { animation-play-state: paused; }
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Loading dots */
+.ldot {
+  width: 5px; height: 5px;
+  background: #475569;
+  border-radius: 50%;
+  animation: ldots 1.2s ease-in-out infinite;
+}
+.ldot:nth-child(2) { animation-delay: 0.2s; }
+.ldot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes ldots {
+  0%, 100% { opacity: 0.3; transform: scale(0.7); }
+  50%       { opacity: 1;   transform: scale(1);   }
+}
+
+/* Price flash */
+@keyframes flashGreen { 0%,100% { background: transparent; } 40% { background: rgba(0,229,160,0.15); } }
+@keyframes flashRed   { 0%,100% { background: transparent; } 40% { background: rgba(244,63,94,0.15);  } }
+.flash-green { animation: flashGreen 0.6s ease; }
+.flash-red   { animation: flashRed   0.6s ease; }
+
+/* Pulse dot */
+.live-dot {
+  width: 6px; height: 6px;
+  background: #00E5A0;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #00E5A0;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
+
+/* Modal backdrop */
+.modal-bg {
+  position: fixed; inset: 0; z-index: 100;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.15s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.modal-card {
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* w3m modal override */
+w3m-modal { z-index: 999 !important; }
