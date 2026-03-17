@@ -54,21 +54,21 @@ function parsePyth(raw: string, expo: number): number {
   return parseFloat(raw) * Math.pow(10, expo);
 }
 
-const HERMES = 'https://hermes.pyth.network';
-const BENCHMARKS = 'https://benchmarks.pyth.network';
+const BENCHMARK_BASE = typeof window !== 'undefined' ? '' : 'https://benchmarks.pyth.network';
 
-// Fetch latest prices for multiple feeds — same as pyth-mcp get_latest_prices
+// Fetch latest prices for multiple feeds — routed through /api/prices to avoid CORS
 export async function fetchPythPrices(
   pairs: string[]
 ): Promise<Record<string, PriceData>> {
   const ids = pairs.map(p => FEED_IDS[p]).filter(Boolean);
   if (!ids.length) return {};
 
-  const qs = ids.map(id => `ids[]=${id}`).join('&');
-  const url = `${HERMES}/v2/updates/price/latest?${qs}&parsed=true`;
+  const qs = ids.map(id => `ids[]=${encodeURIComponent(id)}`).join('&');
+  // Use our server-side proxy route — no CORS, no rate-limit issues
+  const url = `/api/prices?${qs}`;
 
-  const res = await fetch(url, { next: { revalidate: 0 } });
-  if (!res.ok) throw new Error(`Pyth ${res.status}`);
+  const res = await fetch(url, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Pyth proxy ${res.status}`);
   const { parsed } = await res.json();
 
   const out: Record<string, PriceData> = {};
@@ -105,7 +105,7 @@ const BENCHMARK_MAP: Record<string, string> = {
   'QQQ/USD':   'Equity.US.QQQ/USD',
 };
 
-// Fetch OHLC history from Pyth Benchmarks TradingView shim
+// Fetch OHLC history — routed through /api/history proxy
 export async function fetchPythHistory(
   pair: string,
   resolution: string,
@@ -115,7 +115,7 @@ export async function fetchPythHistory(
   const sym = BENCHMARK_MAP[pair];
   if (!sym) return [];
 
-  const url = `${BENCHMARKS}/v1/shims/tradingview/history?symbol=${encodeURIComponent(sym)}&resolution=${resolution}&from=${fromTs}&to=${toTs}`;
+  const url = `/api/history?symbol=${encodeURIComponent(sym)}&resolution=${resolution}&from=${fromTs}&to=${toTs}`;
   const res = await fetch(url);
   if (!res.ok) return [];
   const d = await res.json();

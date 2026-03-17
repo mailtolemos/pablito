@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { fetchFearGreed, fetchGlobalMarket } from '@/lib/market';
+import { fetchMarketData } from '@/lib/market';
 import { useLivePrices } from '@/hooks/useLivePrices';
 import { FEED_IDS } from '@/lib/pyth';
 import { fmtUSD, fmtPct, fmtPrice, fgColor } from '@/lib/fmt';
@@ -48,19 +48,16 @@ function MetricCard({
 }
 
 export function MarketCarousel() {
-  const { data: fg, isLoading: fgLoading } = useQuery({
-    queryKey: ['fear-greed'],
-    queryFn: fetchFearGreed,
+  const { data: market, isLoading: marketLoading } = useQuery({
+    queryKey: ['market-data'],
+    queryFn: fetchMarketData,
     refetchInterval: 60_000,
     staleTime: 60_000,
   });
-
-  const { data: gm, isLoading: gmLoading } = useQuery({
-    queryKey: ['global-market'],
-    queryFn: fetchGlobalMarket,
-    refetchInterval: 60_000,
-    staleTime: 60_000,
-  });
+  const fg = market?.fearGreed;
+  const gm = market?.global;
+  const fgLoading = marketLoading;
+  const gmLoading = marketLoading;
 
   const { prices } = useLivePrices();
   const btcPrice = prices[FEED_IDS['BTC/USD']];
