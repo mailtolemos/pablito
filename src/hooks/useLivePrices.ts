@@ -7,9 +7,8 @@ import { ALL_PAIRS } from '@/lib/feeds';
 
 export type PriceMap = Record<string, PriceData>;
 
-// CoinGecko symbol → Pyth feed ID lookup (for merging)
-// Only crypto has CoinGecko coverage; stocks/FX/commodities use Pyth only
-const SYM_TO_FEED_ID: Record<string, string> = {
+// ─── CoinGecko → feed ID mapping (crypto only) ───────────────────────────────
+const CG_SYM_TO_FEED_ID: Record<string, string> = {
   BTC:   FEED_IDS['BTC/USD'],
   ETH:   FEED_IDS['ETH/USD'],
   SOL:   FEED_IDS['SOL/USD'],
@@ -28,14 +27,32 @@ const SYM_TO_FEED_ID: Record<string, string> = {
   MATIC: FEED_IDS['MATIC/USD'],
 };
 
+// ─── Yahoo Finance → feed ID mapping (stocks, FX, commodities, ETFs) ─────────
+const YAHOO_PAIR_TO_FEED_ID: Record<string, string> = {
+  'AAPL/USD':  FEED_IDS['AAPL/USD'],
+  'NVDA/USD':  FEED_IDS['NVDA/USD'],
+  'TSLA/USD':  FEED_IDS['TSLA/USD'],
+  'MSFT/USD':  FEED_IDS['MSFT/USD'],
+  'GOOGL/USD': FEED_IDS['GOOGL/USD'],
+  'AMZN/USD':  FEED_IDS['AMZN/USD'],
+  'COIN/USD':  FEED_IDS['COIN/USD'],
+  'SPY/USD':   FEED_IDS['SPY/USD'],
+  'QQQ/USD':   FEED_IDS['QQQ/USD'],
+  'EUR/USD':   FEED_IDS['EUR/USD'],
+  'GBP/USD':   FEED_IDS['GBP/USD'],
+  'XAU/USD':   FEED_IDS['XAU/USD'],
+  'XAG/USD':   FEED_IDS['XAG/USD'],
+};
+
+// ─── Fetchers ─────────────────────────────────────────────────────────────────
+
 async function fetchCGPrices(): Promise<PriceMap> {
   const res = await fetch('/api/cg-prices', { cache: 'no-store' });
-  if (!res.ok) throw new Error(`CoinGecko proxy ${res.status}`);
+  if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
   const { prices } = await res.json();
-  // Convert CoinGecko response → PriceMap keyed by Pyth feed ID
   const out: PriceMap = {};
-  for (const [sym, data] of Object.entries(prices as Record<string, { price: number; change24h: number }>)) {
-    const feedId = SYM_TO_FEED_ID[sym];
+  for (const [sym, data] of Object.entries(prices as Record<string, { price: number }>)) {
+    const feedId = CG_SYM_TO_FEED_ID[sym];
     if (feedId) {
       out[feedId] = {
         price:       data.price,
@@ -48,39 +65,74 @@ async function fetchCGPrices(): Promise<PriceMap> {
   return out;
 }
 
-// Central live price hook — polls CoinGecko every 15s + Pyth every 5s
-// CoinGecko fills crypto prices; Pyth adds stocks, FX, commodities + live updates
+async function fetchStockPrices(): Promise<PriceMap> {
+  const res = await fetch('/api/stock-prices', { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Yahoo ${res.status}`);
+  const { prices } = await res.json();
+  const out: PriceMap = {};
+  for (const [pair, data] of Object.entries(prices as Record<string, { price: number }>)) {
+    const feedId = YAHOO_PAIR_TO_FEED_ID[pair];
+    if (feedId) {
+      out[feedId] = {
+        price:       data.price,
+        conf:        0,
+        ema:         data.price,
+        publishTime: Math.floor(Date.now() / 1000),
+      };
+    }
+  }
+  return out;
+}
+
+// ─── Main hook ────────────────────────────────────────────────────────────────
+// Three sources, merged:
+//   1. CoinGecko  — reliable crypto prices (refreshes every 15s)
+//   2. Yahoo      — stocks, ETFs, FX, commodities (refreshes every 30s)
+//   3. Pyth       — high-frequency override for everything (refreshes every 5s)
+//
+// Priority: Pyth > Yahoo > CoinGecko (Pyth is most precise when available)
 export function useLivePrices() {
-  // CoinGecko — reliable for crypto, refreshes every 15s (free tier friendly)
   const { data: cgPrices } = useQuery<PriceMap>({
-    queryKey: ['cg-prices'],
-    queryFn:  fetchCGPrices,
+    queryKey:        ['cg-prices'],
+    queryFn:         fetchCGPrices,
     refetchInterval: 15_000,
     staleTime:       14_000,
-    retry: 3,
-    retryDelay: 2_000,
+    retry:           3,
+    retryDelay:      2_000,
   });
 
-  // Pyth — best for stocks/FX/commodities + higher-freq crypto updates
+  const { data: stockPrices } = useQuery<PriceMap>({
+    queryKey:        ['stock-prices'],
+    queryFn:         fetchStockPrices,
+    refetchInterval: 30_000,
+    staleTime:       29_000,
+    retry:           3,
+    retryDelay:      2_000,
+  });
+
   const { data: pythPrices, isPending: pythPending } = useQuery<PriceMap>({
-    queryKey: ['pyth-prices'],
-    queryFn:  () => fetchPythPrices(ALL_PAIRS),
+    queryKey:        ['pyth-prices'],
+    queryFn:         () => fetchPythPrices(ALL_PAIRS),
     refetchInterval: 5_000,
     staleTime:       4_000,
-    retry: 3,
-    retryDelay: 1_000,
+    retry:           3,
+    retryDelay:      1_000,
   });
 
-  // Merge: CoinGecko base + Pyth overrides (Pyth is more precise when available)
-  const prices: PriceMap = { ...(cgPrices ?? {}), ...(pythPrices ?? {}) };
+  // Merge all three — later sources override earlier ones
+  const prices: PriceMap = {
+    ...(cgPrices    ?? {}),   // base: crypto from CoinGecko
+    ...(stockPrices ?? {}),   // layer: stocks/FX/commodities from Yahoo
+    ...(pythPrices  ?? {}),   // top: Pyth overrides everything when available
+  };
 
-  // Consider loading only if BOTH are pending and we have no prices yet
-  const loading = pythPending && !cgPrices && Object.keys(prices).length === 0;
+  const loading = pythPending && !cgPrices && !stockPrices;
 
   return { prices, loading };
 }
 
-// Get price for a single pair (e.g. 'BTC/USD')
+// ─── Derived hooks ────────────────────────────────────────────────────────────
+
 export function usePairPrice(pair: string): PriceData | undefined {
   const { prices } = useLivePrices();
   const feedId = FEED_IDS[pair];
@@ -88,7 +140,6 @@ export function usePairPrice(pair: string): PriceData | undefined {
   return prices[feedId];
 }
 
-// Rolling spark history for mini sparklines
 export function useSparkHistory(feedId: string, maxLen = 30) {
   const { prices } = useLivePrices();
   const histRef = useRef<number[]>([]);
@@ -104,7 +155,6 @@ export function useSparkHistory(feedId: string, maxLen = 30) {
   return hist;
 }
 
-// Price change direction for flash animation
 export function usePriceDirection(pair: string): 'up' | 'down' | null {
   const { prices } = useLivePrices();
   const feedId = FEED_IDS[pair];
