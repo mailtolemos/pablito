@@ -6,15 +6,17 @@ import { MarketCarousel } from '@/components/MarketCarousel';
 import { WalletSidebar } from '@/components/WalletSidebar';
 import { PriceFeeds } from '@/components/PriceFeeds';
 import { HoldingsTable } from '@/components/HoldingsTable';
+import { DeFiPanel } from '@/components/DeFiPanel';
 import { ChartModal } from '@/components/ChartModal';
 import { AuthModal } from '@/components/AuthModal';
 import { FeedMeta, FEED_MAP } from '@/lib/feeds';
-import { CHAIN_NAMES } from '@/lib/wagmi';
 import { useWalletStore } from '@/lib/store';
 
+type CenterTab = 'holdings' | 'defi';
 const CHAINS = ['all', 'ethereum', 'arbitrum', 'optimism', 'base', 'polygon', 'bsc', 'solana'];
 
 export default function Dashboard() {
+  const [centerTab, setCenterTab] = useState<CenterTab>('holdings');
   const [chainFilter, setChainFilter] = useState('all');
   const [chartFeed, setChartFeed] = useState<FeedMeta | null>(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -47,22 +49,24 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Chain filter pills */}
-        <div className="flex gap-1">
-          {CHAINS.map(c => {
-            const label = c === 'all' ? 'ALL' : c.charAt(0).toUpperCase() + c.slice(1);
-            const isActive = chainFilter === c;
-            return (
-              <button key={c} onClick={() => setChainFilter(c)}
-                className={`text-[9px] px-2.5 py-1 rounded-full transition-all border ${
-                  isActive ? 'bg-bg-3 text-slate-200 border-border-strong' : 'text-slate-600 border-border hover:text-slate-400 hover:border-border-strong'
-                }`}
-                style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.5px' }}>
-                {label}
-              </button>
-            );
-          })}
-        </div>
+        {/* Chain filter pills — only on holdings tab */}
+        {centerTab === 'holdings' && (
+          <div className="flex gap-1">
+            {CHAINS.map(c => {
+              const label = c === 'all' ? 'ALL' : c.charAt(0).toUpperCase() + c.slice(1);
+              const isActive = chainFilter === c;
+              return (
+                <button key={c} onClick={() => setChainFilter(c)}
+                  className={`text-[9px] px-2.5 py-1 rounded-full transition-all border ${
+                    isActive ? 'bg-bg-3 text-slate-200 border-border-strong' : 'text-slate-600 border-border hover:text-slate-400 hover:border-border-strong'
+                  }`}
+                  style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.5px' }}>
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Auth / Profile button */}
         <button
@@ -92,19 +96,38 @@ export default function Dashboard() {
           <WalletSidebar onOpenAuth={() => setShowAuth(true)} />
         </aside>
 
-        {/* Center — holdings */}
+        {/* Center — Holdings / DeFi tabs */}
         <main className="flex-1 overflow-y-auto bg-bg-0">
           <div className="px-5 py-4">
             <MarketCarousel />
-            <div className="flex items-center gap-2 mb-4">
-              <span
-                className="text-[10px] font-bold text-brand border-b-2 border-brand pb-2.5"
-                style={{ fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase' }}
-              >
-                Holdings
-              </span>
+
+            {/* Tab bar */}
+            <div className="flex items-center gap-1 mb-4 border-b border-border pb-0">
+              {([
+                { key: 'holdings', label: 'Holdings' },
+                { key: 'defi',     label: '⟡ DeFi'   },
+              ] as { key: CenterTab; label: string }[]).map(t => (
+                <button
+                  key={t.key}
+                  onClick={() => setCenterTab(t.key)}
+                  className={`px-4 py-2.5 text-[10px] font-bold transition-all border-b-2 -mb-px ${
+                    centerTab === t.key
+                      ? 'text-brand border-brand'
+                      : 'text-slate-500 border-transparent hover:text-slate-300'
+                  }`}
+                  style={{ fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase' }}
+                >
+                  {t.label}
+                </button>
+              ))}
             </div>
-            <HoldingsTable chainFilter={chainFilter} onSelectFeedPair={openChartByPair} />
+
+            {centerTab === 'holdings' && (
+              <HoldingsTable chainFilter={chainFilter} onSelectFeedPair={openChartByPair} />
+            )}
+            {centerTab === 'defi' && (
+              <DeFiPanel />
+            )}
           </div>
         </main>
 
