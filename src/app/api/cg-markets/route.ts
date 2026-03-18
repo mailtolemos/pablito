@@ -9,11 +9,19 @@ type CoinItem = {
   price:     number;
   change24h: number;
   marketCap: number;
+  sparkline: number[];   // downsampled 7d hourly prices (~30 points)
 };
 
+// Downsample an array to at most `n` points
+function downsample(arr: number[], n: number): number[] {
+  if (!arr || arr.length === 0) return [];
+  if (arr.length <= n) return arr;
+  const step = arr.length / n;
+  return Array.from({ length: n }, (_, i) => arr[Math.round(i * step)] ?? arr[arr.length - 1]);
+}
 
 async function fetchPage(page: number): Promise<CoinItem[]> {
-  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=${page}&sparkline=false&price_change_percentage=24h`;
+  const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=${page}&sparkline=true&price_change_percentage=24h`;
   const res = await fetch(url, {
     cache: 'no-store',
     headers: { 'Accept': 'application/json', 'User-Agent': 'pablito-app/1.0' },
@@ -29,6 +37,7 @@ async function fetchPage(page: number): Promise<CoinItem[]> {
     current_price: number;
     price_change_percentage_24h: number;
     market_cap: number;
+    sparkline_in_7d?: { price: number[] };
   }): CoinItem => ({
     rank:      c.market_cap_rank,
     id:        c.id,
@@ -38,6 +47,7 @@ async function fetchPage(page: number): Promise<CoinItem[]> {
     price:     c.current_price ?? 0,
     change24h: c.price_change_percentage_24h ?? 0,
     marketCap: c.market_cap ?? 0,
+    sparkline: downsample(c.sparkline_in_7d?.price ?? [], 30),
   }));
 }
 

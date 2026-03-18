@@ -3,28 +3,72 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Font variables ─────────────────────────────────────────────────────── */
 :root {
   --font-sans: 'Cabinet Grotesk', system-ui, sans-serif;
   --font-mono: 'Space Mono', monospace;
 }
 
+/* ─── Dark theme (default) ───────────────────────────────────────────────── */
+:root {
+  --bg-0: #080A0D;
+  --bg-1: #0D1017;
+  --bg-2: #131820;
+  --bg-3: #1A2030;
+  --bg-4: #222A3A;
+  --c-border:        rgba(255,255,255,0.07);
+  --c-border-strong: rgba(255,255,255,0.13);
+  --c-text:          #E2E8F0;
+  --c-brand:         #00E5A0;
+}
+
+/* ─── Light theme ────────────────────────────────────────────────────────── */
+html.light {
+  --bg-0: #F1F5F9;
+  --bg-1: #FFFFFF;
+  --bg-2: #F8FAFC;
+  --bg-3: #EFF2F6;
+  --bg-4: #E2E8F0;
+  --c-border:        rgba(0,0,0,0.08);
+  --c-border-strong: rgba(0,0,0,0.16);
+  --c-text:          #0F172A;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
 
 html, body {
   height: 100%;
-  background: #080A0D;
-  color: #E2E8F0;
+  background: var(--bg-0);
+  color: var(--c-text);
   font-family: var(--font-sans);
   overflow: hidden;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
-/* Scrollbars */
+/* ─── Text color overrides for light mode ────────────────────────────────── */
+html.light .text-slate-100 { color: #0F172A !important; }
+html.light .text-slate-200 { color: #1E293B !important; }
+html.light .text-slate-300 { color: #334155 !important; }
+html.light .text-slate-400 { color: #475569 !important; }
+html.light .text-slate-500 { color: #64748B !important; }
+html.light .text-slate-600 { color: #94A3B8 !important; }
+html.light .text-slate-700 { color: #CBD5E1 !important; }
+
+/* Text cyan in light mode */
+html.light .text-cyan-400  { color: #0284C7 !important; }
+html.light .text-cyan-900  { color: #0369A1 !important; }
+
+/* Brand stays the same */
+html.light .text-brand { color: var(--c-brand) !important; }
+
+/* ─── Scrollbars ─────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1A2030; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #2a3450; }
+::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--bg-4); }
 
-/* Ticker */
+/* ─── Ticker ─────────────────────────────────────────────────────────────── */
 .ticker-wrap { overflow: hidden; }
 .ticker-inner {
   display: flex;
@@ -38,7 +82,7 @@ html, body {
   100% { transform: translateX(-50%); }
 }
 
-/* Loading dots */
+/* ─── Loading dots ───────────────────────────────────────────────────────── */
 .ldot {
   width: 5px; height: 5px;
   background: #475569;
@@ -52,13 +96,13 @@ html, body {
   50%       { opacity: 1;   transform: scale(1);   }
 }
 
-/* Price flash */
+/* ─── Price flash ────────────────────────────────────────────────────────── */
 @keyframes flashGreen { 0%,100% { background: transparent; } 40% { background: rgba(0,229,160,0.15); } }
 @keyframes flashRed   { 0%,100% { background: transparent; } 40% { background: rgba(244,63,94,0.15);  } }
 .flash-green { animation: flashGreen 0.6s ease; }
 .flash-red   { animation: flashRed   0.6s ease; }
 
-/* Pulse dot */
+/* ─── Pulse dot ──────────────────────────────────────────────────────────── */
 .live-dot {
   width: 6px; height: 6px;
   background: #00E5A0;
@@ -68,7 +112,37 @@ html, body {
 }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.7)} }
 
-/* Modal backdrop */
+/* ─── Monitor LIVE badge ─────────────────────────────────────────────────── */
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-mono);
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #00E5A0;
+  background: rgba(0,229,160,0.12);
+  border: 1px solid rgba(0,229,160,0.25);
+  border-radius: 4px;
+  padding: 1px 5px;
+  animation: badgePulse 2s ease-in-out infinite;
+}
+.live-badge::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #00E5A0;
+  box-shadow: 0 0 4px #00E5A0;
+  flex-shrink: 0;
+}
+@keyframes badgePulse {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.7; }
+}
+
+/* ─── Modal backdrop ─────────────────────────────────────────────────────── */
 .modal-bg {
   position: fixed; inset: 0; z-index: 100;
   background: rgba(0,0,0,0.75);
@@ -85,5 +159,5 @@ html, body {
   to   { opacity: 1; transform: translateY(0);    }
 }
 
-/* w3m modal override */
+/* ─── w3m modal override ─────────────────────────────────────────────────── */
 w3m-modal { z-index: 999 !important; }

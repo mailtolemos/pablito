@@ -13,6 +13,9 @@ export const metadata: Metadata = {
   },
 };
 
+// No-flash theme script — runs synchronously before paint
+const themeScript = `(function(){try{var t=localStorage.getItem('pablito-theme');if(t==='light')document.documentElement.classList.add('light');}catch(e){}})();`;
+
 export default function RootLayout({
   children,
 }: {
@@ -20,6 +23,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>

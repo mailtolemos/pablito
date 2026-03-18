@@ -10,24 +10,19 @@ import { DeFiPanel } from '@/components/DeFiPanel';
 import { WorldMonitor } from '@/components/WorldMonitor';
 import { ChartModal } from '@/components/ChartModal';
 import { AuthModal } from '@/components/AuthModal';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { FeedMeta, FEED_MAP } from '@/lib/feeds';
 import { useWalletStore } from '@/lib/store';
 
 type CenterTab = 'holdings' | 'defi' | 'monitor';
 
-const TABS: { key: CenterTab; label: string }[] = [
-  { key: 'holdings', label: 'Holdings'       },
-  { key: 'defi',     label: '⟡ DeFi'         },
-  { key: 'monitor',  label: '📡 Monitor'      },
-];
-
 const CHAINS = ['all', 'ethereum', 'arbitrum', 'optimism', 'base', 'polygon', 'bsc', 'solana'];
 
 export default function Dashboard() {
-  const [centerTab, setCenterTab] = useState<CenterTab>('holdings');
+  const [centerTab, setCenterTab]   = useState<CenterTab>('holdings');
   const [chainFilter, setChainFilter] = useState('all');
-  const [chartFeed, setChartFeed] = useState<FeedMeta | null>(null);
-  const [showAuth, setShowAuth] = useState(false);
+  const [chartFeed, setChartFeed]   = useState<FeedMeta | null>(null);
+  const [showAuth, setShowAuth]     = useState(false);
   const { profile } = useWalletStore();
 
   const openChartByPair = (pair: string) => {
@@ -39,9 +34,11 @@ export default function Dashboard() {
     <div className="flex flex-col h-screen overflow-hidden bg-bg-0 text-slate-200">
       <Ticker />
 
-      {/* Header */}
-      <header className="flex items-center justify-between px-5 h-12 bg-bg-1 border-b border-border flex-shrink-0">
-        <div className="flex items-center gap-3">
+      {/* ── Header ──────────────────────────────────────────────────────── */}
+      <header className="flex items-center justify-between px-5 h-12 bg-bg-1 border-b border-border flex-shrink-0 gap-3">
+
+        {/* Logo + status */}
+        <div className="flex items-center gap-3 flex-shrink-0">
           <div className="flex items-center gap-2">
             <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
               <circle cx="13" cy="13" r="13" fill="#00E5A0" opacity="0.9"/>
@@ -49,7 +46,7 @@ export default function Dashboard() {
             </svg>
             <span className="text-[17px] font-black tracking-[-0.5px] text-slate-100">Pablito</span>
           </div>
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-bg-3 border border-border">
+          <div className="hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-full bg-bg-3 border border-border">
             <div className="live-dot" />
             <span className="text-[9px] text-cyan-400 tracking-wider" style={{ fontFamily: 'var(--font-mono)' }}>
               CHECKING YOUR BAGS…
@@ -59,13 +56,13 @@ export default function Dashboard() {
 
         {/* Chain filter pills — only on holdings tab */}
         {centerTab === 'holdings' && (
-          <div className="flex gap-1">
+          <div className="flex gap-1 overflow-x-auto flex-1 justify-center">
             {CHAINS.map(c => {
               const label = c === 'all' ? 'ALL' : c.charAt(0).toUpperCase() + c.slice(1);
               const isActive = chainFilter === c;
               return (
                 <button key={c} onClick={() => setChainFilter(c)}
-                  className={`text-[9px] px-2.5 py-1 rounded-full transition-all border ${
+                  className={`text-[9px] px-2.5 py-1 rounded-full transition-all border whitespace-nowrap flex-shrink-0 ${
                     isActive ? 'bg-bg-3 text-slate-200 border-border-strong' : 'text-slate-600 border-border hover:text-slate-400 hover:border-border-strong'
                   }`}
                   style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.5px' }}>
@@ -76,27 +73,31 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Auth / Profile button */}
-        <button
-          onClick={() => setShowAuth(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-[11px] font-bold transition-all border border-slate-700 bg-bg-3 text-slate-300 hover:border-brand/30 hover:text-brand"
-          style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.5px' }}
-        >
-          {profile ? (
-            <>
-              <div className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-[#080A0D]"
-                style={{ background: profile.avatarColor }}>
-                {profile.displayName.charAt(0).toUpperCase()}
-              </div>
-              {profile.displayName}
-            </>
-          ) : (
-            '⟡ SIGN IN'
-          )}
-        </button>
+        {/* Right controls */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <ThemeToggle />
+
+          <button
+            onClick={() => setShowAuth(true)}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all border border-slate-700 bg-bg-3 text-slate-300 hover:border-brand/30 hover:text-brand"
+            style={{ fontFamily: 'var(--font-mono)', letterSpacing: '0.5px' }}
+          >
+            {profile ? (
+              <>
+                <div className="w-4 h-4 rounded-full flex items-center justify-center text-[9px] font-black text-[#080A0D]"
+                  style={{ background: profile.avatarColor }}>
+                  {profile.displayName.charAt(0).toUpperCase()}
+                </div>
+                {profile.displayName}
+              </>
+            ) : (
+              '⟡ SIGN IN'
+            )}
+          </button>
+        </div>
       </header>
 
-      {/* 3-column layout */}
+      {/* ── 3-column layout ──────────────────────────────────────────────── */}
       <div className="flex flex-1 overflow-hidden">
 
         {/* Left — wallet sidebar */}
@@ -110,21 +111,40 @@ export default function Dashboard() {
             <MarketCarousel />
 
             {/* Tab bar */}
-            <div className="flex items-center gap-1 mb-5 border-b border-border pb-0">
-              {TABS.map(t => (
-                <button
-                  key={t.key}
-                  onClick={() => setCenterTab(t.key)}
-                  className={`px-4 py-2.5 text-[10px] font-bold transition-all border-b-2 -mb-px whitespace-nowrap ${
-                    centerTab === t.key
-                      ? 'text-brand border-brand'
-                      : 'text-slate-500 border-transparent hover:text-slate-300'
-                  }`}
-                  style={{ fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase' }}
-                >
-                  {t.label}
-                </button>
-              ))}
+            <div className="flex items-center gap-0.5 mb-5 border-b border-border pb-0">
+              {/* Holdings tab */}
+              <button onClick={() => setCenterTab('holdings')}
+                className={`px-4 py-2.5 text-[10px] font-bold transition-all border-b-2 -mb-px whitespace-nowrap ${
+                  centerTab === 'holdings'
+                    ? 'text-brand border-brand'
+                    : 'text-slate-500 border-transparent hover:text-slate-300'
+                }`}
+                style={{ fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                Holdings
+              </button>
+
+              {/* DeFi tab */}
+              <button onClick={() => setCenterTab('defi')}
+                className={`px-4 py-2.5 text-[10px] font-bold transition-all border-b-2 -mb-px whitespace-nowrap ${
+                  centerTab === 'defi'
+                    ? 'text-brand border-brand'
+                    : 'text-slate-500 border-transparent hover:text-slate-300'
+                }`}
+                style={{ fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                ⟡ DeFi
+              </button>
+
+              {/* Monitor tab — spotlighted with LIVE badge */}
+              <button onClick={() => setCenterTab('monitor')}
+                className={`px-4 py-2.5 text-[10px] font-bold transition-all border-b-2 -mb-px whitespace-nowrap flex items-center gap-2 ${
+                  centerTab === 'monitor'
+                    ? 'text-brand border-brand'
+                    : 'text-slate-500 border-transparent hover:text-slate-300'
+                }`}
+                style={{ fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                📡 Monitor
+                <span className="live-badge">LIVE</span>
+              </button>
             </div>
 
             {centerTab === 'holdings' && (
@@ -140,7 +160,7 @@ export default function Dashboard() {
         </main>
 
         {/* Right — markets panel */}
-        <aside className="w-[290px] flex-shrink-0 border-l border-border bg-bg-1 overflow-hidden flex flex-col">
+        <aside className="w-[300px] flex-shrink-0 border-l border-border bg-bg-1 overflow-hidden flex flex-col">
           <PriceFeeds onSelectFeed={f => setChartFeed(f)} />
         </aside>
       </div>
