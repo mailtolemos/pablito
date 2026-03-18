@@ -27,22 +27,10 @@ const CG_SYM_TO_FEED_ID: Record<string, string> = {
   MATIC: FEED_IDS['MATIC/USD'],
 };
 
-// ─── Yahoo Finance → feed ID mapping (stocks, FX, commodities, ETFs) ─────────
-const YAHOO_PAIR_TO_FEED_ID: Record<string, string> = {
-  'AAPL/USD':  FEED_IDS['AAPL/USD'],
-  'NVDA/USD':  FEED_IDS['NVDA/USD'],
-  'TSLA/USD':  FEED_IDS['TSLA/USD'],
-  'MSFT/USD':  FEED_IDS['MSFT/USD'],
-  'GOOGL/USD': FEED_IDS['GOOGL/USD'],
-  'AMZN/USD':  FEED_IDS['AMZN/USD'],
-  'COIN/USD':  FEED_IDS['COIN/USD'],
-  'SPY/USD':   FEED_IDS['SPY/USD'],
-  'QQQ/USD':   FEED_IDS['QQQ/USD'],
-  'EUR/USD':   FEED_IDS['EUR/USD'],
-  'GBP/USD':   FEED_IDS['GBP/USD'],
-  'XAU/USD':   FEED_IDS['XAU/USD'],
-  'XAG/USD':   FEED_IDS['XAG/USD'],
-};
+// ─── Yahoo Finance → feed ID mapping (all assets that also have Pyth feeds) ───
+const YAHOO_PAIR_TO_FEED_ID: Record<string, string> = Object.fromEntries(
+  Object.entries(FEED_IDS).map(([pair, feedId]) => [pair, feedId])
+);
 
 // ─── Fetchers ─────────────────────────────────────────────────────────────────
 

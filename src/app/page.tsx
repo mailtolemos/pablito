@@ -6,24 +6,20 @@ import { MarketCarousel } from '@/components/MarketCarousel';
 import { WalletSidebar } from '@/components/WalletSidebar';
 import { PriceFeeds } from '@/components/PriceFeeds';
 import { HoldingsTable } from '@/components/HoldingsTable';
-import { PricesTable } from '@/components/PricesTable';
 import { ChartModal } from '@/components/ChartModal';
 import { AuthModal } from '@/components/AuthModal';
 import { FeedMeta, FEED_MAP } from '@/lib/feeds';
 import { CHAIN_NAMES } from '@/lib/wagmi';
 import { useWalletStore } from '@/lib/store';
 
-type Tab = 'holdings' | 'prices';
 const CHAINS = ['all', 'ethereum', 'arbitrum', 'optimism', 'base', 'polygon', 'bsc', 'solana'];
 
 export default function Dashboard() {
-  const [tab, setTab] = useState<Tab>('holdings');
   const [chainFilter, setChainFilter] = useState('all');
   const [chartFeed, setChartFeed] = useState<FeedMeta | null>(null);
   const [showAuth, setShowAuth] = useState(false);
-  const { profile, wallets } = useWalletStore();
+  const { profile } = useWalletStore();
 
-  const openChart = (feed: FeedMeta) => setChartFeed(feed);
   const openChartByPair = (pair: string) => {
     const f = FEED_MAP[pair];
     if (f) setChartFeed(f);
@@ -90,37 +86,31 @@ export default function Dashboard() {
 
       {/* 3-column layout */}
       <div className="flex flex-1 overflow-hidden">
+
+        {/* Left — wallet sidebar */}
         <aside className="w-[260px] flex-shrink-0 border-r border-border bg-bg-1 overflow-hidden flex flex-col">
           <WalletSidebar onOpenAuth={() => setShowAuth(true)} />
         </aside>
 
+        {/* Center — holdings */}
         <main className="flex-1 overflow-y-auto bg-bg-0">
           <div className="px-5 py-4">
             <MarketCarousel />
-
-            <div className="flex items-center gap-1 mb-4 border-b border-border pb-0">
-              {(['holdings', 'prices'] as Tab[]).map(t => (
-                <button key={t} onClick={() => setTab(t)}
-                  className={`px-4 py-2.5 text-[10px] font-bold transition-all border-b-2 -mb-px ${
-                    tab === t ? 'text-brand border-brand' : 'text-slate-500 border-transparent hover:text-slate-300'
-                  }`}
-                  style={{ fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                  {t}
-                </button>
-              ))}
+            <div className="flex items-center gap-2 mb-4">
+              <span
+                className="text-[10px] font-bold text-brand border-b-2 border-brand pb-2.5"
+                style={{ fontFamily: 'var(--font-mono)', letterSpacing: '1px', textTransform: 'uppercase' }}
+              >
+                Holdings
+              </span>
             </div>
-
-            {tab === 'holdings' && (
-              <HoldingsTable chainFilter={chainFilter} onSelectFeedPair={openChartByPair} />
-            )}
-            {tab === 'prices' && (
-              <PricesTable onSelectFeed={openChart} />
-            )}
+            <HoldingsTable chainFilter={chainFilter} onSelectFeedPair={openChartByPair} />
           </div>
         </main>
 
-        <aside className="w-[280px] flex-shrink-0 border-l border-border bg-bg-1 overflow-hidden flex flex-col">
-          <PriceFeeds onSelectFeed={openChart} />
+        {/* Right — full markets panel */}
+        <aside className="w-[290px] flex-shrink-0 border-l border-border bg-bg-1 overflow-hidden flex flex-col">
+          <PriceFeeds onSelectFeed={f => setChartFeed(f)} />
         </aside>
       </div>
 
