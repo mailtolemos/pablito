@@ -7,12 +7,20 @@ import { WalletSidebar } from '@/components/WalletSidebar';
 import { PriceFeeds } from '@/components/PriceFeeds';
 import { HoldingsTable } from '@/components/HoldingsTable';
 import { DeFiPanel } from '@/components/DeFiPanel';
+import { WorldMonitor } from '@/components/WorldMonitor';
 import { ChartModal } from '@/components/ChartModal';
 import { AuthModal } from '@/components/AuthModal';
 import { FeedMeta, FEED_MAP } from '@/lib/feeds';
 import { useWalletStore } from '@/lib/store';
 
-type CenterTab = 'holdings' | 'defi';
+type CenterTab = 'holdings' | 'defi' | 'monitor';
+
+const TABS: { key: CenterTab; label: string }[] = [
+  { key: 'holdings', label: 'Holdings'       },
+  { key: 'defi',     label: '⟡ DeFi'         },
+  { key: 'monitor',  label: '📡 Monitor'      },
+];
+
 const CHAINS = ['all', 'ethereum', 'arbitrum', 'optimism', 'base', 'polygon', 'bsc', 'solana'];
 
 export default function Dashboard() {
@@ -96,21 +104,18 @@ export default function Dashboard() {
           <WalletSidebar onOpenAuth={() => setShowAuth(true)} />
         </aside>
 
-        {/* Center — Holdings / DeFi tabs */}
+        {/* Center — tabs */}
         <main className="flex-1 overflow-y-auto bg-bg-0">
           <div className="px-5 py-4">
             <MarketCarousel />
 
             {/* Tab bar */}
-            <div className="flex items-center gap-1 mb-4 border-b border-border pb-0">
-              {([
-                { key: 'holdings', label: 'Holdings' },
-                { key: 'defi',     label: '⟡ DeFi'   },
-              ] as { key: CenterTab; label: string }[]).map(t => (
+            <div className="flex items-center gap-1 mb-5 border-b border-border pb-0">
+              {TABS.map(t => (
                 <button
                   key={t.key}
                   onClick={() => setCenterTab(t.key)}
-                  className={`px-4 py-2.5 text-[10px] font-bold transition-all border-b-2 -mb-px ${
+                  className={`px-4 py-2.5 text-[10px] font-bold transition-all border-b-2 -mb-px whitespace-nowrap ${
                     centerTab === t.key
                       ? 'text-brand border-brand'
                       : 'text-slate-500 border-transparent hover:text-slate-300'
@@ -128,17 +133,20 @@ export default function Dashboard() {
             {centerTab === 'defi' && (
               <DeFiPanel />
             )}
+            {centerTab === 'monitor' && (
+              <WorldMonitor />
+            )}
           </div>
         </main>
 
-        {/* Right — full markets panel */}
+        {/* Right — markets panel */}
         <aside className="w-[290px] flex-shrink-0 border-l border-border bg-bg-1 overflow-hidden flex flex-col">
           <PriceFeeds onSelectFeed={f => setChartFeed(f)} />
         </aside>
       </div>
 
       {chartFeed && <ChartModal feed={chartFeed} onClose={() => setChartFeed(null)} />}
-      {showAuth && <AuthModal onClose={() => setShowAuth(false)} />}
+      {showAuth  && <AuthModal  onClose={() => setShowAuth(false)} />}
     </div>
   );
 }
