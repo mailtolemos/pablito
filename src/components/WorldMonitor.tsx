@@ -127,7 +127,7 @@ function IndicatorGroup({ group, indicators }: { group: string; indicators: Indi
 
 function IndicatorSkeleton() {
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       {Array.from({ length: 4 }).map((_, gi) => (
         <div key={gi} className="space-y-1.5">
           <div className="h-2 bg-bg-3 rounded w-20 animate-pulse mb-2" />
@@ -262,25 +262,23 @@ export function WorldMonitor() {
     <div className="space-y-6">
 
       {/* ── Header bar ────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div>
-            <div className="text-[18px] font-black text-slate-100 tracking-tight">World Monitor</div>
-            <div className="text-[9px] text-slate-600 mt-0.5" style={{ fontFamily: 'var(--font-mono)' }}>
-              Financial markets · Economic data · Live news
-            </div>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <div className="text-[16px] sm:text-[18px] font-black text-slate-100 tracking-tight">World Monitor</div>
+          <div className="text-[9px] text-slate-600 mt-0.5 hidden sm:block" style={{ fontFamily: 'var(--font-mono)' }}>
+            Financial markets · Economic data · Live news
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-bg-1 border border-border">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-bg-1 border border-border">
             <div className="live-dot" />
             <span className="text-[10px] font-bold text-cyan-400" style={{ fontFamily: 'var(--font-mono)' }}>
               {clock}
             </span>
           </div>
           {secAgo !== null && (
-            <span className="text-[9px] text-slate-600" style={{ fontFamily: 'var(--font-mono)' }}>
-              updated {secAgo}s ago
+            <span className="text-[9px] text-slate-600 hidden sm:inline" style={{ fontFamily: 'var(--font-mono)' }}>
+              {secAgo}s ago
             </span>
           )}
         </div>
@@ -294,7 +292,7 @@ export function WorldMonitor() {
         {indLoading ? (
           <IndicatorSkeleton />
         ) : (
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {(['yields', 'indices', 'fear', 'commodities'] as const).map(g => (
               <IndicatorGroup key={g} group={g} indicators={byGroup[g] ?? []} />
             ))}
@@ -327,10 +325,13 @@ export function WorldMonitor() {
               ))}
             </div>
           </div>
-          <div className="flex items-center gap-1.5 text-[9px] text-slate-600" style={{ fontFamily: 'var(--font-mono)' }}>
+          <div className="hidden sm:flex items-center gap-1.5 text-[9px] text-slate-600" style={{ fontFamily: 'var(--font-mono)' }}>
             <span>{filteredNews.length} articles</span>
             <span>·</span>
-            <span>Reuters · AP · CNBC · CoinDesk · CoinTelegraph</span>
+            <span>WatcherGuru · CoinDesk · CT · Decrypt · The Block · Reuters · CNBC · WSJ</span>
+          </div>
+          <div className="flex sm:hidden items-center gap-1.5 text-[9px] text-slate-600" style={{ fontFamily: 'var(--font-mono)' }}>
+            <span>{filteredNews.length} articles</span>
           </div>
         </div>
 
@@ -353,8 +354,7 @@ export function WorldMonitor() {
 
         {/* Sources attribution */}
         <div className="mt-2 text-[8px] text-slate-700 text-center" style={{ fontFamily: 'var(--font-mono)' }}>
-          Data: Reuters · AP News · CNBC · Yahoo Finance · CoinDesk · CoinTelegraph · WSJ Markets
-          · refreshes every 60s · links open original source
+          WatcherGuru · CoinDesk · CoinTelegraph · Decrypt · The Block · Reuters · AP · CNBC · Yahoo Finance · WSJ · refreshes every 60s
         </div>
       </div>
     </div>

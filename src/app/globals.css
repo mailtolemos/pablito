@@ -39,11 +39,28 @@ html.light {
 
 html, body {
   height: 100%;
+  /* Fill entire screen including safe areas on iOS notch devices */
+  min-height: -webkit-fill-available;
   background: var(--bg-0);
   color: var(--c-text);
   font-family: var(--font-sans);
   overflow: hidden;
   transition: background 0.2s ease, color 0.2s ease;
+  /* iOS momentum scrolling */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* iOS safe-area padding for bottom nav */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Mobile-safe tap targets */
+@media (max-width: 767px) {
+  button, a { -webkit-tap-highlight-color: transparent; }
 }
 
 /* ─── Text color overrides for light mode ────────────────────────────────── */

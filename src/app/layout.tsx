@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { Providers } from '@/components/Providers';
 
@@ -11,6 +11,15 @@ export const metadata: Metadata = {
     description: 'Pablito is checking your bags…',
     type: 'website',
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,   // prevent auto-zoom on iOS input focus
+  userScalable: false,
+  viewportFit: 'cover', // handle iOS notch / safe-area
+  themeColor: '#080A0D',
 };
 
 // No-flash theme script — runs synchronously before paint
